@@ -6,10 +6,13 @@ import jaci.pathfinder.modifiers.TankModifier;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 // 260
@@ -41,6 +44,18 @@ public class Main extends JComponent{
         }
     }
 
+    private static class Text{
+        final int x;
+        final int y;
+        final String text;
+
+        public Text(int x, int y, String text) {
+            this.x = x;
+            this.y = y;
+            this.text = text;
+        }
+    }
+
     public Main() {
 //        for(int i = 0; i < 100; i++) {
 //            lines.add(new Line(i*10, 300, i*10, 400, Color.GREEN));
@@ -50,6 +65,7 @@ public class Main extends JComponent{
 
     private final LinkedList<Line> lines = new LinkedList<Line>();
     private final LinkedList<Point> points = new LinkedList<Point>();
+    private final LinkedList<Text> times = new LinkedList<>();
 
     public void addLine(int x1, int x2, int x3, int x4) {
         addLine(x1, x2, x3, x4, Color.black);
@@ -57,6 +73,11 @@ public class Main extends JComponent{
 
     public void addLine(int x1, int x2, int x3, int x4, Color color) {
         lines.add(new Line(x1,x2,x3,x4, color));
+        repaint();
+    }
+
+    public void addText(String text, int x, int y) {
+        times.add(new Text(x, y, text));
         repaint();
     }
 
@@ -95,127 +116,71 @@ public class Main extends JComponent{
             g.setColor(Color.BLACK);
             g.drawOval(point.x-3, point.y-3,6,6);
         }
+
+        for (int i = 0; i < times.size(); i++) {
+            Text time = times.get(i);
+            int x = time.x;
+            int y = time.y;
+            while(checkForText(i, x, y)) {
+                y -= 20;
+            }
+            g.setColor(Color.BLACK);
+            g.drawString(time.text, x, y);
+        }
+    }
+
+    public boolean checkForText(int afterIndex, int x, int y) {
+        for (int i = times.size() - 1; i > afterIndex; i--) {
+            Text time = times.get(i);
+            int xDif = Math.abs(time.x - x);
+            int yDif = Math.abs(time.y - y);
+            if(yDif < 20 && xDif < 100) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) {
 
-        /******* TEST WAYPOINT FOR SCALING ********/
-//        Waypoint[] firstPath = new Waypoint[]{
-//                new Waypoint(0, 0, 0),
-//                new Waypoint(7.75,0, Pathfinder.d2r(0))  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//        };
-
-        /******* 40KPA CLOSE AUTO **********/
-//        Waypoint[] firstPath = new Waypoint[]{
-//                new Waypoint(0, -3.5, 0),
-//                new Waypoint(4.775, -10.75, Pathfinder.d2r(-90))  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//        };
-//        Waypoint[] secondPath = new Waypoint[]{
-//            new Waypoint(4.775, -10.75, Pathfinder.d2r(90)),
-//            new Waypoint(4.775, -10.0, Pathfinder.d2r(90)),  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//            new Waypoint(5.5, -8.5, Pathfinder.d2r(0))
-//        };
-//        Waypoint[] thirdPath = new Waypoint[]{
-//                new Waypoint(5.5, -8.5, Pathfinder.d2r(0)),  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//                new Waypoint(0.75, -8.5, Pathfinder.d2r(45)),
-//                new Waypoint(-.25, -9.5, Pathfinder.d2r(45))
-//        };
-
-
-        /******* 40KPA FAR AUTO **********/
-//        Waypoint[] firstPath = new Waypoint[]{
-//                new Waypoint(0, -3.5, 0),
-//                new Waypoint(8, -10.75, Pathfinder.d2r(-90))  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//        };
-//        Waypoint[] secondPath = new Waypoint[]{
-//            new Waypoint(8, -10.75, Pathfinder.d2r(90)),
-//            new Waypoint(8, -9.0, Pathfinder.d2r(90)),  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//            new Waypoint(9, -6.75, Pathfinder.d2r(0))
-//        };
-//        Waypoint[] thirdPath = new Waypoint[]{
-//                new Waypoint(9, -6.75, Pathfinder.d2r(0)),  // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//                new Waypoint(0.75, -8.5, Pathfinder.d2r(45)),
-//                new Waypoint(-.25, -9.5, Pathfinder.d2r(45))
-//        };
-
-        /******* GEAR + 10KPA AUTO **********/
-        Waypoint[] firstPath = new Waypoint[]{
-                new Waypoint(0, 0, Pathfinder.d2r(0)),
-                new Waypoint(2.625,2,Pathfinder.d2r(45)),
-                new Waypoint(6,3.625,Pathfinder.d2r(0)),
-                new Waypoint(7.5,3.2,Pathfinder.d2r(-45)),
-                new Waypoint(7.7,2.85,Pathfinder.d2r(-90)),
-                new Waypoint(6.5,2.25,Pathfinder.d2r(-180)),
-                new Waypoint(5.3,1.9,Pathfinder.d2r(-135)),
-//                    new Waypoint(0, 0, Pathfinder.d2r(0)),
-//                    new Waypoint(30,0,Pathfinder.d2r(0)),
-//                new Waypoint(7,3.5,-45),
-//                new Waypoint(7.75,2.5,-90),
-//                new Waypoint(5.25,1.75,-135),
-//                new Waypoint(3,0,0)0)),      // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
-//                new Waypoint(3,0,0),
-//                new Waypoint(4,-1,Pathfinder.d2r(315)),
-//                new Waypoint(5,-2,Pathfinder.d2r(0)),
-//                new Waypoint(6,-1, Pathfinder.d2r(90)),
-//                new Waypoint(5,0,Pathfinder.d2r(180)),
-//                new Waypoint(4,-1,Pathfinder.d2r(225)),
-//                new Waypoint(3,-2,Pathfinder.d2r(180)),
-//                new Waypoint(2,-1, Pathfinder.d2r(90)),
-//                new Waypoint(3,0,0)
-        };
-
-//        Waypoint[] secondPath = new Waypoint[]{
-//                new Waypoint(7, -2.25, Pathfinder.d2r(60)),  // Waypoint @ x=-4, y=-1, exit angle=-45 degreee
-//                new Waypoint(-.25, -9.5, Pathfinder.d2r(45))
-//        };
-
-
-        Trajectory.Config config = new Trajectory.Config(Trajectory.FitMethod.HERMITE_QUINTIC, Trajectory.Config.SAMPLES_HIGH, 0.01, 4, 4.0, 50.0);
-
-        Trajectory firstTrajectory = Pathfinder.generate(firstPath, config);
-//        Trajectory secondTrajectory = Pathfinder.generate(secondPath, config);
-//        Trajectory thirdTrajectory = Pathfinder.generate(thirdPath, config);
-
-        double wheelbase_width = .768; //29.25/12;
-
-        // Create the Modifier Object
-        TankModifier firstTank = new TankModifier(firstTrajectory);
-//        TankModifier secondTank = new TankModifier(secondTrajectory);
-//        TankModifier thirdTank = new TankModifier(thirdTrajectory);
-
-        // Generate the Left and Right trajectories using the original trajectory
-        // as the centre
-        firstTank.modify(wheelbase_width);
-//        secondTank.modify(wheelbase_width);
-//        thirdTank.modify(wheelbase_width);
-
+        Trajectory.Config config = new Trajectory.Config(Trajectory.FitMethod.HERMITE_QUINTIC, Trajectory.Config.SAMPLES_HIGH, 0.01, 2.0, 4.0, 50.0);
+        double wheelbase_width = .694; //29.25/12;
 
         JFrame testFrame = new JFrame();
         testFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
         final Main comp = new Main();
         comp.setPreferredSize(new Dimension(1250, 1012));
         testFrame.getContentPane().add(comp, BorderLayout.CENTER);
 
-        drawTrajectory(comp, firstTrajectory, Color.PINK, false);
-        drawTrajectory(comp, firstTank.getLeftTrajectory(), Color.BLUE, true);
-        drawTrajectory(comp, firstTank.getRightTrajectory(), Color.RED, false);
-//        drawTrajectory(comp, secondTrajectory, Color.PINK);
-//        drawTrajectory(comp, secondTank.getLeftTrajectory(), Color.RED);
-//        drawTrajectory(comp, secondTank.getRightTrajectory(), Color.BLUE);
-//        drawTrajectory(comp, thirdTrajectory, Color.PINK);
-//        drawTrajectory(comp, thirdTank.getLeftTrajectory(), Color.BLUE);
-//        drawTrajectory(comp, thirdTank.getRightTrajectory(), Color.RED);
-//        drawTrajectory(comp, secondTrajectory);
-//        drawTrajectory(comp, thirdTrajectory);
+//        WaypointTable waypointTable = new WaypointTable();
+//        JTable table = new JTable(waypointTable);
+//        testFrame.getContentPane().add(table, BorderLayout.LINE_END);
+//
+//        JButton testButton = new JButton("Add Row");
+//        testFrame.getContentPane().add(testButton, BorderLayout.PAGE_START);
+//        testButton.addActionListener(e -> {
+//            waypointTable.addRow(new Double[]{0.0, 0.0, 0.0});
+//            table.repaint();
+//        });
+
+        for(Waypoint[] path : FourTotePlatform.PATH) {
+            Trajectory traj = Pathfinder.generate(path, config);
+            TankModifier tank = new TankModifier(traj);
+            tank.modify(wheelbase_width);
+//            drawTrajectory(comp, tank.getLeftTrajectory(), Color.BLUE, false);
+//            drawTrajectory(comp, tank.getRightTrajectory(), Color.RED, false);
+            drawTrajectory(comp, traj, Color.PINK, true);
+        }
 
         testFrame.pack();
         testFrame.setVisible(true);
 
-        System.out.println((time/3.0));
+        System.out.println((time));
         System.out.println(maxVel);
     }
 
-    public static void drawTrajectory(Main comp, Trajectory trajectory, Color color, boolean print) {
+    public static void drawTrajectory(Main comp, Trajectory trajectory, Color color, boolean count) {
         for (int i = 1; i < trajectory.length(); i++) {
             Trajectory.Segment prevSeg = trajectory.get(i-1);
             Trajectory.Segment seg = trajectory.get(i);
@@ -226,19 +191,24 @@ public class Main extends JComponent{
                 maxVel = prevSeg.velocity * -1;
             }
 
-            if(print) System.out.println(prevSeg.velocity);
-
-            time += prevSeg.dt;
+            if(count) time += prevSeg.dt;
 
             int x1 = (int) (prevSeg.x * scale);
             int x2 = (int) (seg.x * scale);
             int y1 = (int) -(prevSeg.y * scale) + 506;
             int y2 = (int) -(seg.y * scale) + 506;
 
-            if(i == 1) comp.addDot(x1, y1);
+            int textX = x1;
+            int textY = y1+20;
 
+//            if(i == 1) comp.addDot(x1, y1);
+            if(count && Math.round(time*100) % 50 == 0) {
+                comp.addDot(x1, y1);
+            }
+//            if(count && (i == trajectory.length() / 2 || /*i == trajectory.length() / 4 ||*/ i == trajectory.length() - 1 )) comp.addText(Double.toString(Math.round(time*100)/100.0), textX, textY);
 
             comp.addLine(x1, y1, x2, y2, color);
         }
+
     }
 }
